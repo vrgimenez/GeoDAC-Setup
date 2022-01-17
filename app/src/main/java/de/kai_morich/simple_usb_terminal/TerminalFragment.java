@@ -27,7 +27,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -64,6 +69,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean controlLinesEnabled = false;
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
+
+    private ToggleButton tb_connect;
+    private TextView tv_version;
+    private EditText et_serial;
+    private Button btn_get_version, btn_get_serial, btn_set_serial;
+    private CheckBox cb_in1_ana, cb_in1_dig, cb_in1_2dig;
+    private CheckBox cb_in2_ana, cb_in2_dig, cb_out2_st;
+    private RadioGroup rg_busy_source;
+    private Button btn_get_pwron_counter, btn_set_pwron_counter;
+    private EditText et_pwron_counter;
+    private Button btn_reset;
 
     public TerminalFragment() {
         broadcastReceiver = new BroadcastReceiver() {
@@ -181,6 +197,147 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         View sendBtn = view.findViewById(R.id.send_btn);
         sendBtn.setOnClickListener(v -> send(sendText.getText().toString()));
         controlLines = new ControlLines(view);
+
+		tb_connect = view.findViewById(R.id.tb_connect);
+		tb_connect.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				if(tb_connect.isChecked()) {
+					sendText.setText("bac77ERI##");
+				} else {
+					sendText.setText("AT+EXIT=1\n");
+				}
+				send(sendText.getText().toString());
+			}
+		});
+        tv_version = view.findViewById(R.id.tv_version);
+        btn_get_version = view.findViewById(R.id.btn_get_version);
+        btn_get_version.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendText.setText("AT+VER?\n");
+                send(sendText.getText().toString());
+            }
+        });
+        et_serial = view.findViewById(R.id.et_serial);
+        et_serial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final String SerialNStr = et_serial.getText().toString();
+                final long SerialN;
+                if(SerialNStr.length() == 0) {
+                    et_serial.requestFocus();
+                    et_serial.setError("Completar");
+                }
+                else if (!SerialNStr.matches("[0-9a-fA-F]{1,12}")) {
+                    et_serial.requestFocus();
+                    et_serial.setError("(0 a 0xFFFFFFFFFFFF)");
+                }
+                else {
+                    SerialN = Long.parseLong(SerialNStr);
+                }
+            }
+        });
+        btn_get_serial = view.findViewById(R.id.btn_get_serial);
+        btn_get_serial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendText.setText("AT+SN?\n");
+                send(sendText.getText().toString());
+            }
+        });
+        btn_set_serial = view.findViewById(R.id.btn_get_serial);
+        btn_set_serial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendText.setText("AT+SN="+et_serial.getText().toString()+"\n");
+                send(sendText.getText().toString());
+            }
+        });
+        cb_in1_ana = view.findViewById(R.id.checkbox_in1_ana);
+        cb_in1_ana.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(cb_in1_ana.isChecked()) {
+                    sendText.setText("AT+SENCFG=1\n");
+                    send(sendText.getText().toString());
+                }
+            }
+        });
+        cb_in1_dig = view.findViewById(R.id.checkbox_in1_dig);
+        cb_in1_dig.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(cb_in1_dig.isChecked()) {
+                    sendText.setText("AT+SENCFG=2\n");
+                    send(sendText.getText().toString());
+                }
+            }
+        });
+        rg_busy_source = view.findViewById(R.id.busy_source);
+        rg_busy_source.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup radioGroup, int i) {
+                switch (i) {
+                    case R.id.remis_mode:
+                        sendText.setText("AT+REMIS=1\n");
+                        send(sendText.getText().toString());
+                        break;
+                    case R.id.taxi_mode:
+                        sendText.setText("AT+REMIS=0\n");
+                        send(sendText.getText().toString());
+                        break;
+                }
+            }
+        });
+        et_pwron_counter = view.findViewById(R.id.et_pwron_counter);
+        et_pwron_counter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final String PowerOnCntStr = et_pwron_counter.getText().toString();
+                final short PowerOnCnt;
+                final String regex_0toFF = "[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]";
+                if(PowerOnCntStr.length() == 0) {
+                    et_pwron_counter.requestFocus();
+                    et_pwron_counter.setError("Completar");
+                }
+                else if (!PowerOnCntStr.matches(regex_0toFF)) {
+                    et_pwron_counter.requestFocus();
+                    et_pwron_counter.setError("(0 a 255)");
+                }
+                else {
+                    PowerOnCnt = Short.parseShort(PowerOnCntStr);
+                }
+            }
+        });
+        btn_get_pwron_counter = view.findViewById(R.id.btn_get_pwron_counter);
+        btn_get_pwron_counter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendText.setText("AT+PWRON?\n");
+                send(sendText.getText().toString());
+            }
+        });
+        btn_set_pwron_counter = view.findViewById(R.id.btn_set_pwron_counter);
+		btn_set_pwron_counter.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				sendText.setText("AT+PWRON="+et_pwron_counter.getText().toString()+"\n");
+				send(sendText.getText().toString());
+			}
+		});
+        btn_reset = view.findViewById(R.id.reset);
+        btn_reset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+				tb_connect.setChecked(false);
+                tv_version.setText("");
+                et_serial.setText("");
+                et_pwron_counter.setText("");
+                sendText.setText("AT+RST=1\n");
+                send(sendText.getText().toString());
+            }
+        });
         return view;
     }
 
@@ -351,6 +508,28 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 pendingNewline = msg.charAt(msg.length() - 1) == '\r';
             }
             receiveText.append(TextUtil.toCaretString(msg, newline.length() != 0));
+
+            final String _SN_ = "+SN: ";
+            if(msg.contains(_SN_))
+                et_serial.setText(
+                        msg.substring(
+                                msg.indexOf(_SN_)+_SN_.length(),
+                                msg.indexOf(TextUtil.newline_lf,msg.indexOf(_SN_)))
+                );
+            final String _VER_ = "+VER: ";
+            if(msg.contains(_VER_))
+                tv_version.setText(
+                        msg.substring(
+                                msg.indexOf(_VER_)+_VER_.length(),
+                                msg.indexOf(" | ",msg.indexOf(_VER_)))
+                );
+            final String _PWRON_ = "+ATPWRON: ";
+            if(msg.contains(_PWRON_))
+                et_pwron_counter.setText(
+                        msg.substring(
+                                msg.indexOf(_PWRON_)+_PWRON_.length(),
+                                msg.indexOf(TextUtil.newline_lf,msg.indexOf(_PWRON_)))
+                );
         }
     }
 
@@ -473,5 +652,4 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             riBtn.setChecked(false);
         }
     }
-
 }

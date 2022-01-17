@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Simple USB Terminal</string>
     <string name="devices">USB Devices</string>
+    <string name="busy_source">Se Ocupa con</string>
+    <string name="taxi_mode">Reloj de Taxi</string>
+    <string name="remis_mode">Sensor de Asiento</string>
 </resources>

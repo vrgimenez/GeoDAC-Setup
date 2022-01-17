@@ -2,9 +2,11 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:scrollbars="vertical">
 
     <LinearLayout
         android:id="@+id/controlLines"
@@ -81,8 +83,8 @@
 
     <View
         android:layout_width="match_parent"
-        android:background="?android:attr/listDivider"
-        android:layout_height="2dp" />
+        android:layout_height="2dp"
+        android:background="?android:attr/listDivider" />
 
     <TextView
         android:id="@+id/receive_text"
@@ -93,6 +95,234 @@
         android:gravity="bottom"
         android:scrollbars="vertical"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+    <ToggleButton
+        android:id="@+id/tb_connect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textOff="Conectar"
+        android:textOn="Desconectar" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="?android:attr/listDivider" />
+
+    <TextView
+        android:id="@+id/tv_firmware_version"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#3F51B5"
+        android:gravity="center_horizontal"
+        android:text="Firmware"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btn_get_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get" />
+
+        <TextView
+            android:id="@+id/tv_version"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:editable="false"
+            android:inputType="text|textNoSuggestions"
+            android:singleLine="true"
+            tools:ignore="Deprecated" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="?android:attr/listDivider" />
+
+    <TextView
+        android:id="@+id/tv_firmware_serial"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#3F51B5"
+        android:gravity="center_horizontal"
+        android:text="Número de Serie"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btn_get_serial"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get" />
+        <EditText
+            android:id="@+id/et_serial"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:inputType="text|textNoSuggestions"
+            android:singleLine="true" />
+        <Button
+            android:id="@+id/btn_set_serial"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Set" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="?android:attr/listDivider" />
+
+    <TextView
+        android:id="@+id/in1_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#3F51B5"
+        android:gravity="center_horizontal"
+        android:text="In/Out 1"
+        android:textAlignment="viewStart"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+    <CheckBox
+        android:id="@+id/checkbox_in1_ana"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sensor Analógico" />
+    <CheckBox
+        android:id="@+id/checkbox_in1_dig"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sensor Digital" />
+    <CheckBox
+        android:id="@+id/checkbox_in1_2dig"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sensor Digital Doble" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="?android:attr/listDivider" />
+
+    <TextView
+        android:id="@+id/in2_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#3F51B5"
+        android:gravity="center_horizontal"
+        android:text="In/Out 2"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+    <CheckBox
+        android:id="@+id/checkbox_in2_ana"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sensor Analógico" />
+    <CheckBox
+        android:id="@+id/checkbox_in2_dig"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sensor Digital" />
+    <CheckBox
+        android:id="@+id/checkbox_out2_st"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Salida Móvil Ocupado" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="?android:attr/listDivider" />
+
+    <TextView
+        android:id="@+id/busy_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#3F51B5"
+        android:gravity="center_horizontal"
+        android:text="@string/busy_source"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <RadioGroup
+        android:id="@+id/busy_source"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checkedButton="@id/remis_mode"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/remis_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/remis_mode" />
+
+        <RadioButton
+            android:id="@+id/taxi_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/taxi_mode" />
+    </RadioGroup>
+
+    <View
+        android:layout_width="match_parent"
+        android:background="?android:attr/listDivider"
+        android:layout_height="2dp" />
+
+    <TextView
+        android:id="@+id/tv_pwron_counter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#3F51B5"
+        android:gravity="center_horizontal"
+        android:text="Contador de Encendidos"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btn_get_pwron_counter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get" />
+        <EditText
+            android:id="@+id/et_pwron_counter"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:inputType="text|textNoSuggestions"
+            android:singleLine="true" />
+        <Button
+            android:id="@+id/btn_set_pwron_counter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Set" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:background="?android:attr/listDivider"
+        android:layout_height="2dp" />
+
+    <Button
+        android:id="@+id/reset"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Firmware Reset" />
 
     <View
         android:layout_width="match_parent"
