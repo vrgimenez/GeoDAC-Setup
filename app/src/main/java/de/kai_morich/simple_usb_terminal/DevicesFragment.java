@@ -78,6 +78,12 @@ public class DevicesFragment extends ListFragment {
         setEmptyText("<no USB devices found>");
         ((TextView) getListView().getEmptyView()).setTextSize(18);
         setListAdapter(listAdapter);
+    /*	Force Open UI
+        Bundle args = new Bundle();
+        args.putInt("baud", baudRate);
+        Fragment fragment = new TerminalFragment();
+        fragment.setArguments(args);
+        getFragmentManager().beginTransaction().replace(R.id.fragment, fragment, "terminal").addToBackStack(null).commit();*/
     }
 
     @Override

@@ -27,12 +27,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -71,12 +73,20 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private String newline = TextUtil.newline_crlf;
 
     private ToggleButton tb_connect;
+	private Button btn_get_version;
     private TextView tv_version;
-    private EditText et_serial;
-    private Button btn_get_version, btn_get_serial, btn_set_serial;
+    private Button btn_get_serial, btn_set_serial;
+	private EditText et_serial;
     private CheckBox cb_in1_ana, cb_in1_dig, cb_in1_2dig;
     private CheckBox cb_in2_ana, cb_in2_dig, cb_out2_st;
-    private RadioGroup rg_busy_source;
+    private Button btn_get_busy_source, btn_set_busy_source;
+    private Spinner sp_busy_source;
+    private Button btn_get_odom_constant, btn_set_odom_constant;
+    private EditText et_odom_constant;
+    private Button btn_get_odom_value, btn_set_odom_value;
+    private EditText et_odom_value;
+    private Button btn_get_odom_divider, btn_set_odom_divider;
+    private Spinner sp_odom_divider;
     private Button btn_get_pwron_counter, btn_set_pwron_counter;
     private EditText et_pwron_counter;
     private Button btn_reset;
@@ -198,6 +208,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         sendBtn.setOnClickListener(v -> send(sendText.getText().toString()));
         controlLines = new ControlLines(view);
 
+        //ENABLE AT COMMAND MODE
 		tb_connect = view.findViewById(R.id.tb_connect);
 		tb_connect.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -210,7 +221,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 				send(sendText.getText().toString());
 			}
 		});
-        tv_version = view.findViewById(R.id.tv_version);
+
+        //FIRMWARE_VERSION
         btn_get_version = view.findViewById(R.id.btn_get_version);
         btn_get_version.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -219,25 +231,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 send(sendText.getText().toString());
             }
         });
-        et_serial = view.findViewById(R.id.et_serial);
-        et_serial.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                final String SerialNStr = et_serial.getText().toString();
-                final long SerialN;
-                if(SerialNStr.length() == 0) {
-                    et_serial.requestFocus();
-                    et_serial.setError("Completar");
-                }
-                else if (!SerialNStr.matches("[0-9a-fA-F]{1,12}")) {
-                    et_serial.requestFocus();
-                    et_serial.setError("(0 a 0xFFFFFFFFFFFF)");
-                }
-                else {
-                    SerialN = Long.parseLong(SerialNStr);
-                }
-            }
-        });
+        tv_version = view.findViewById(R.id.tv_version);
+
+        //FIRMWARE_SERIAL
+        final String regex_0toFFFFFFFFFFFF = "[0-9a-fA-F]{1,12}";
         btn_get_serial = view.findViewById(R.id.btn_get_serial);
         btn_get_serial.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -246,14 +243,42 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 send(sendText.getText().toString());
             }
         });
-        btn_set_serial = view.findViewById(R.id.btn_get_serial);
+        et_serial = view.findViewById(R.id.et_serial);
+        et_serial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String SerialNStr = et_serial.getText().toString();
+                if(SerialNStr.length() == 0) {
+                    et_serial.requestFocus();
+                    et_serial.setError("Completar");
+                }
+                else if (!SerialNStr.matches(regex_0toFFFFFFFFFFFF)) {
+                    et_serial.requestFocus();
+                    et_serial.setError("(0x0 a 0xFFFFFFFFFFFF)");
+                }
+            }
+        });
+        btn_set_serial = view.findViewById(R.id.btn_set_serial);
         btn_set_serial.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendText.setText("AT+SN="+et_serial.getText().toString()+"\n");
-                send(sendText.getText().toString());
+                String SerialNStr = et_serial.getText().toString();
+                if(SerialNStr.length() == 0) {
+                    et_serial.requestFocus();
+                    et_serial.setError("Completar");
+                }
+                else if (!SerialNStr.matches(regex_0toFFFFFFFFFFFF)) {
+                    et_serial.requestFocus();
+                    et_serial.setError("(0x0 a 0xFFFFFFFFFFFF)");
+                }
+                else {
+                    sendText.setText("AT+SN="+et_serial.getText().toString()+"\n");
+                    send(sendText.getText().toString());
+                }
             }
         });
+
+        //IN/OUT1
         cb_in1_ana = view.findViewById(R.id.checkbox_in1_ana);
         cb_in1_ana.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -274,29 +299,139 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 }
             }
         });
-        rg_busy_source = view.findViewById(R.id.busy_source);
-        rg_busy_source.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+
+        //IN/OUT2
+
+        //BUSY_SOURCE
+        btn_get_busy_source = view.findViewById(R.id.btn_get_busy_source);
+        btn_get_busy_source.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                switch (i) {
-                    case R.id.remis_mode:
-                        sendText.setText("AT+REMIS=1\n");
-                        send(sendText.getText().toString());
+            public void onClick(View view) {
+                sendText.setText("AT+REMIS?\n");
+                send(sendText.getText().toString());
+            }
+        });
+        sp_busy_source = view.findViewById(R.id.sp_busy_source);
+        ArrayAdapter<CharSequence> ad_busy_source = ArrayAdapter.createFromResource(getActivity(),
+                R.array.busy_source, android.R.layout.simple_spinner_dropdown_item);
+        ad_busy_source.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sp_busy_source.setAdapter(ad_busy_source);
+        btn_set_busy_source = view.findViewById(R.id.btn_set_busy_source);
+        btn_set_busy_source.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(sp_busy_source.getSelectedItemPosition() == 0)
+                    sendText.setText("AT+REMIS=1\n");
+                else
+                    sendText.setText("AT+REMIS=0\n");
+                send(sendText.getText().toString());
+            }
+        });
+
+        //ODOM_CONSTANT
+        btn_get_odom_constant = view.findViewById(R.id.btn_get_odom_constant);
+        btn_get_odom_constant.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendText.setText("AT+ODOMC?\n");
+                send(sendText.getText().toString());
+            }
+        });
+        et_odom_constant = view.findViewById(R.id.et_odom_constant);
+        btn_set_odom_constant = view.findViewById(R.id.btn_set_odom_constant);
+        btn_set_odom_constant.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendText.setText("AT+ODOMC="+et_odom_constant.getText().toString()+"\n");
+                send(sendText.getText().toString());
+            }
+        });
+
+        //ODOM_VALUE
+        btn_get_odom_value = view.findViewById(R.id.btn_get_odom_value);
+        btn_get_odom_value.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendText.setText("AT+ODOMV?\n");
+                send(sendText.getText().toString());
+            }
+        });
+        et_odom_value =view.findViewById(R.id.et_odom_value);
+        btn_set_odom_value = view.findViewById(R.id.btn_set_odom_value);
+        btn_set_odom_value.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendText.setText("AT+ODOMV="+et_odom_value.getText().toString()+"\n");
+                send(sendText.getText().toString());
+            }
+        });
+
+        //ODOM_DIVIDER
+        btn_get_odom_divider = view.findViewById(R.id.btn_get_odom_divider);
+        btn_get_odom_divider.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendText.setText("AT+ODOMD?\n");
+                send(sendText.getText().toString());
+            }
+        });
+        sp_odom_divider = view.findViewById(R.id.sp_odom_divider);
+        ArrayAdapter<CharSequence> ad_odom_divider = ArrayAdapter.createFromResource(getActivity(),
+                R.array.odom_divider, android.R.layout.simple_spinner_dropdown_item);
+        ad_odom_divider.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sp_odom_divider.setAdapter(ad_odom_divider);
+        btn_set_odom_divider = view.findViewById(R.id.btn_set_odom_divider);
+        btn_set_odom_divider.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                switch(sp_odom_divider.getSelectedItemPosition()) {
+                    case 0:
+                        sendText.setText("AT+ODOMD=8\n");
                         break;
-                    case R.id.taxi_mode:
-                        sendText.setText("AT+REMIS=0\n");
-                        send(sendText.getText().toString());
+                    case 1:
+                        sendText.setText("AT+ODOMD=4\n");
+                        break;
+                    case 2:
+                        sendText.setText("AT+ODOMD=2\n");
+                        break;
+                    case 3:
+                        sendText.setText("AT+ODOMD=1\n");
                         break;
                 }
+                send(sendText.getText().toString());
+            }
+        });
+
+        //PWRON_COUNTER
+        final String regex_0toFF = "[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]";
+        btn_get_pwron_counter = view.findViewById(R.id.btn_get_pwron_counter);
+        btn_get_pwron_counter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendText.setText("AT+PWRON?\n");
+                send(sendText.getText().toString());
             }
         });
         et_pwron_counter = view.findViewById(R.id.et_pwron_counter);
         et_pwron_counter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final String PowerOnCntStr = et_pwron_counter.getText().toString();
-                final short PowerOnCnt;
-                final String regex_0toFF = "[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]";
+                String PowerOnCntStr = et_pwron_counter.getText().toString();
+                if(PowerOnCntStr.length() == 0) {
+                    et_pwron_counter.requestFocus();
+                    et_pwron_counter.setError("Completar");
+                }
+                else if (!PowerOnCntStr.matches(regex_0toFF)) {
+                    et_pwron_counter.requestFocus();
+                    et_pwron_counter.setError("(0 a 255)");
+                }
+            }
+        });
+        btn_set_pwron_counter = view.findViewById(R.id.btn_set_pwron_counter);
+		btn_set_pwron_counter.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+                String PowerOnCntStr = et_pwron_counter.getText().toString();
                 if(PowerOnCntStr.length() == 0) {
                     et_pwron_counter.requestFocus();
                     et_pwron_counter.setError("Completar");
@@ -306,26 +441,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     et_pwron_counter.setError("(0 a 255)");
                 }
                 else {
-                    PowerOnCnt = Short.parseShort(PowerOnCntStr);
+                    sendText.setText("AT+PWRON="+et_pwron_counter.getText().toString()+"\n");
+                    send(sendText.getText().toString());
                 }
-            }
-        });
-        btn_get_pwron_counter = view.findViewById(R.id.btn_get_pwron_counter);
-        btn_get_pwron_counter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sendText.setText("AT+PWRON?\n");
-                send(sendText.getText().toString());
-            }
-        });
-        btn_set_pwron_counter = view.findViewById(R.id.btn_set_pwron_counter);
-		btn_set_pwron_counter.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				sendText.setText("AT+PWRON="+et_pwron_counter.getText().toString()+"\n");
-				send(sendText.getText().toString());
 			}
 		});
+
+        //RESET
         btn_reset = view.findViewById(R.id.reset);
         btn_reset.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -509,13 +631,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
             receiveText.append(TextUtil.toCaretString(msg, newline.length() != 0));
 
-            final String _SN_ = "+SN: ";
-            if(msg.contains(_SN_))
-                et_serial.setText(
-                        msg.substring(
-                                msg.indexOf(_SN_)+_SN_.length(),
-                                msg.indexOf(TextUtil.newline_lf,msg.indexOf(_SN_)))
-                );
             final String _VER_ = "+VER: ";
             if(msg.contains(_VER_))
                 tv_version.setText(
@@ -523,6 +638,48 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                                 msg.indexOf(_VER_)+_VER_.length(),
                                 msg.indexOf(" | ",msg.indexOf(_VER_)))
                 );
+            final String _SN_ = "+SN: ";
+            if(msg.contains(_SN_))
+                et_serial.setText(
+                        msg.substring(
+                                msg.indexOf(_SN_)+_SN_.length(),
+                                msg.indexOf(TextUtil.newline_lf,msg.indexOf(_SN_)))
+                );
+            final String _REMIS_ = "+REMIS: ";
+            if(msg.contains(_REMIS_))
+                if(Byte.parseByte(
+                        msg.substring(
+                            msg.indexOf(_REMIS_)+_REMIS_.length(),
+                            msg.indexOf(TextUtil.newline_lf,msg.indexOf(_REMIS_)))) == 1)
+                    sp_busy_source.setSelection(0);
+            final String _ODOMC_ = "+ODOMC: ";
+            if(msg.contains(_ODOMC_))
+                et_odom_constant.setText(
+                        msg.substring(
+                                msg.indexOf(_ODOMC_)+_ODOMC_.length(),
+                                msg.indexOf(TextUtil.newline_lf,msg.indexOf(_ODOMC_)))
+                );
+            final String _ODOMV_ = "+ODOMV: ";
+            if(msg.contains(_ODOMV_))
+                et_odom_value.setText(
+                        msg.substring(
+                                msg.indexOf(_ODOMV_)+_ODOMV_.length(),
+                                msg.indexOf(TextUtil.newline_lf,msg.indexOf(_ODOMV_)))
+                );
+            final String _ODOMD_ = "+ODOMD: ";
+            if(msg.contains(_ODOMD_)) {
+                byte OdometerDiv = Byte.parseByte(
+                        msg.substring(
+                                msg.indexOf(_ODOMD_)+_ODOMD_.length(),
+                                msg.indexOf(TextUtil.newline_lf,msg.indexOf(_ODOMD_))));
+                switch(OdometerDiv)
+                {
+                    case 8: sp_odom_divider.setSelection(0); break;
+                    case 4: sp_odom_divider.setSelection(1); break;
+                    case 2: sp_odom_divider.setSelection(2); break;
+                    case 1: sp_odom_divider.setSelection(3); break;
+                }
+            }
             final String _PWRON_ = "+ATPWRON: ";
             if(msg.contains(_PWRON_))
                 et_pwron_counter.setText(

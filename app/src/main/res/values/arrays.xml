@@ -17,4 +17,14 @@
         <item>\u000a</item>
         <item></item>
     </string-array>
+	<string-array name="busy_source">
+		<item>Sensor de Asiento</item>
+		<item>Reloj de Taxi</item>
+	</string-array>
+    <string-array name="odom_divider">
+        <item>8</item>
+        <item>4</item>
+        <item>2</item>
+        <item>1 (Disabled)</item>
+    </string-array>
 </resources>
