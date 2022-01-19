@@ -72,6 +72,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
 
+    private ControlLines localEcho;
+    private boolean localEchoEnabled = false;
     private ToggleButton tb_connect;
 	private Button btn_get_version;
     private TextView tv_version;
@@ -272,7 +274,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     et_serial.setError("(0x0 a 0xFFFFFFFFFFFF)");
                 }
                 else {
-                    sendText.setText("AT+SN="+et_serial.getText().toString()+"\n");
+                    sendText.setText("AT+SN="+SerialNStr+"\n");
                     send(sendText.getText().toString());
                 }
             }
@@ -329,7 +331,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         });
 
         //ODOM_CONSTANT
-        btn_get_odom_constant = view.findViewById(R.id.btn_get_odom_constant);
+		final String regex_1to59999 = "^([1-9]|[1-9][0-9]|[1-9][0-9]{2}|[1-9][0-9]{3}|[1-5][0-9]{4})$";
+		btn_get_odom_constant = view.findViewById(R.id.btn_get_odom_constant);
         btn_get_odom_constant.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -338,16 +341,42 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
         });
         et_odom_constant = view.findViewById(R.id.et_odom_constant);
+		et_odom_constant.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				String OdometerConstStr = et_odom_constant.getText().toString();
+				if(OdometerConstStr.length() == 0) {
+					et_odom_constant.requestFocus();
+					et_odom_constant.setError("Completar");
+				}
+				else if (!OdometerConstStr.matches(regex_1to59999)) {
+					et_odom_constant.requestFocus();
+					et_odom_constant.setError("(1 a 59999)");
+				}
+			}
+		});
         btn_set_odom_constant = view.findViewById(R.id.btn_set_odom_constant);
         btn_set_odom_constant.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendText.setText("AT+ODOMC="+et_odom_constant.getText().toString()+"\n");
-                send(sendText.getText().toString());
+				String OdometerConstStr = et_odom_constant.getText().toString();
+				if(OdometerConstStr.length() == 0) {
+					et_odom_constant.requestFocus();
+					et_odom_constant.setError("Completar");
+				}
+				else if (!OdometerConstStr.matches(regex_1to59999)) {
+					et_odom_constant.requestFocus();
+					et_odom_constant.setError("(1 a 59999)");
+				}
+				else {
+					sendText.setText("AT+ODOMC="+OdometerConstStr+"\n");
+					send(sendText.getText().toString());
+				}
             }
         });
 
         //ODOM_VALUE
+        final String regex_0to9999999999 = "^([0-9]{1,10})$";
         btn_get_odom_value = view.findViewById(R.id.btn_get_odom_value);
         btn_get_odom_value.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -357,12 +386,44 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
         });
         et_odom_value =view.findViewById(R.id.et_odom_value);
+        et_odom_value.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String OdometerValStr = et_odom_value.getText().toString();
+                if(OdometerValStr.length() == 0) {
+                    et_odom_value.requestFocus();
+                    et_odom_value.setError("Completar");
+                }
+                else if (!OdometerValStr.matches(regex_0to9999999999)) {
+                    et_odom_value.requestFocus();
+                    et_odom_value.setError("(0 a 4294967295)");
+                }
+            }
+        });
         btn_set_odom_value = view.findViewById(R.id.btn_set_odom_value);
         btn_set_odom_value.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendText.setText("AT+ODOMV="+et_odom_value.getText().toString()+"\n");
-                send(sendText.getText().toString());
+                String OdometerValStr = et_odom_value.getText().toString();
+                if(OdometerValStr.length() == 0) {
+                    et_odom_value.requestFocus();
+                    et_odom_value.setError("Completar");
+                }
+                else if (!OdometerValStr.matches(regex_0to9999999999)) {
+                    et_odom_value.requestFocus();
+                    et_odom_value.setError("(0 a 4294967295)");
+                }
+                else {
+                    long OdometerVal = Long.getLong(OdometerValStr);
+                    if(OdometerVal > 4294967295L) {
+                        et_odom_value.requestFocus();
+                        et_odom_value.setError("(0 a 4294967295)");
+                    }
+                    else {
+                        sendText.setText("AT+ODOMV="+OdometerValStr+"\n");
+                        send(sendText.getText().toString());
+                    }
+                }
             }
         });
 
@@ -441,7 +502,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     et_pwron_counter.setError("(0 a 255)");
                 }
                 else {
-                    sendText.setText("AT+PWRON="+et_pwron_counter.getText().toString()+"\n");
+                    sendText.setText("AT+PWRON="+PowerOnCntStr+"\n");
                     send(sendText.getText().toString());
                 }
 			}
@@ -468,6 +529,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         inflater.inflate(R.menu.menu_terminal, menu);
         menu.findItem(R.id.hex).setChecked(hexEnabled);
         menu.findItem(R.id.controlLines).setChecked(controlLinesEnabled);
+        menu.findItem(R.id.localEcho).setChecked(localEchoEnabled);
     }
 
     @Override
@@ -503,6 +565,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             } else {
                 controlLines.stop();
             }
+            return true;
+        } else if (id == R.id.localEcho) {
+            localEchoEnabled = !localEchoEnabled;
+            item.setChecked(localEchoEnabled);
             return true;
         } else if (id == R.id.sendBreak) {
             try {
@@ -604,7 +670,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
             SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
             spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            receiveText.append(spn);
+            if(localEchoEnabled)
+                receiveText.append(spn);
             service.write(data);
         } catch (SerialTimeoutException e) {
             status("write timeout: " + e.getMessage());

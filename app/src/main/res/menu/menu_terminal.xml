@@ -21,6 +21,11 @@
         android:checkable="true"
         app:showAsAction="never" />
     <item
+        android:id="@+id/localEcho"
+        android:title="Local Echo"
+        android:checkable="true"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/sendBreak"
         android:title="Send BREAK"
         app:showAsAction="never" />
