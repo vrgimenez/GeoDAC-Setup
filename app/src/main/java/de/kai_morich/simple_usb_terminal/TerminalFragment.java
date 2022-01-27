@@ -30,10 +30,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +47,9 @@ import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.text.Format;
 import java.util.EnumSet;
 
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
@@ -77,10 +78,15 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private ToggleButton tb_connect;
 	private Button btn_get_version;
     private TextView tv_version;
-    private Button btn_get_serial, btn_set_serial;
+	private Button btn_get_serial, btn_set_serial;
 	private EditText et_serial;
+    private Button btn_get_sens_cfg, btn_set_sens_cfg;
+	private EditText et_sens_cfg;
     private CheckBox cb_in1_ana, cb_in1_dig, cb_in1_2dig;
     private CheckBox cb_in2_ana, cb_in2_dig, cb_out2_st;
+    private short SensorCfg;
+    private boolean in1_ana, in1_dig, in1_2dig;
+	private boolean in2_ana, in2_dig, out2_st;
     private Button btn_get_busy_source, btn_set_busy_source;
     private Spinner sp_busy_source;
     private Button btn_get_odom_constant, btn_set_odom_constant;
@@ -280,29 +286,179 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
         });
 
+		//SENSOR_CONFIGURATION
+		final String regex_0toFFFF = "[0-9a-fA-F]{1,4}";
+		btn_get_sens_cfg = view.findViewById(R.id.btn_get_sens_cfg);
+		btn_get_sens_cfg.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				sendText.setText("AT+SENCFG?\n");
+				send(sendText.getText().toString());
+			}
+		});
+		et_sens_cfg = view.findViewById(R.id.et_sens_cfg);
+		et_sens_cfg.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				String SensorCfgStr = et_sens_cfg.getText().toString();
+				if(SensorCfgStr.length() == 0) {
+					et_sens_cfg.requestFocus();
+					et_sens_cfg.setError("Completar");
+				}
+				else if (!SensorCfgStr.matches(regex_0toFFFF)) {
+					et_sens_cfg.requestFocus();
+					et_sens_cfg.setError("(0x0 a 0xFFFF)");
+				}
+			}
+		});
+        btn_set_sens_cfg = view.findViewById(R.id.btn_set_sens_cfg);
+		btn_set_sens_cfg.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+                String SensorCfgStr = et_sens_cfg.getText().toString();
+                if(SensorCfgStr.length() == 0) {
+                    et_sens_cfg.requestFocus();
+                    et_sens_cfg.setError("Completar");
+                }
+                else if (!SensorCfgStr.matches(regex_0toFFFF)) {
+                    et_sens_cfg.requestFocus();
+                    et_sens_cfg.setError("(0x0 a 0xFFFF)");
+                }
+                else {
+                    if(in1_2dig)        // si junto los Cables de los Sensores Digitales
+                    {
+                        in1_dig= true;  // habilito como Digital Entrada In1/Rear
+                        in2_ana= false; // y deshabilito Entrada In2/Front
+                        in2_dig= false;
+                    }
+                    else
+                    if( in2_ana ||      // si habilito la Entrada In2/Front, inhibo la Salida de Estado (y viceversa)
+                        in2_dig )
+                    {
+                        out2_st= false;
+                    }
+                    else
+                    if(out2_st)
+                    {
+                        in2_ana= false;
+                        in2_dig= false;
+                    }
+
+                    cb_in1_ana.setChecked(in1_ana);
+                    cb_in1_dig.setChecked(in1_dig);
+                    cb_in1_2dig.setChecked(in1_2dig);
+                    cb_in2_ana.setChecked(in2_ana);
+                    cb_in2_dig.setChecked(in2_dig);
+                    cb_out2_st.setChecked(out2_st);
+
+                    SensorCfg = 0;
+                    if(in1_ana)
+                        SensorCfg |=  (0x01 << 0);
+                    else
+                        SensorCfg &= ~(0x01 << 0);
+                    if(in1_dig)
+                        SensorCfg |=  (0x01 << 1);
+                    else
+                        SensorCfg &= ~(0x01 << 1);
+                    if(in1_2dig)
+                        SensorCfg |=  (0x01 << 2);
+                    else
+                        SensorCfg &= ~(0x01 << 2);
+                    if(in2_ana)
+                        SensorCfg |=  (0x01 << 4);
+                    else
+                        SensorCfg &= ~(0x01 << 4);
+                    if(in2_dig)
+                        SensorCfg |=  (0x01 << 5);
+                    else
+                        SensorCfg &= ~(0x01 << 5);
+                    if(out2_st)
+                        SensorCfg |=  (0x01 << 6);
+                    else
+                        SensorCfg &= ~(0x01 << 6);
+
+                    et_sens_cfg.setText(String.format("%04X",SensorCfg));
+                    SensorCfgStr = et_sens_cfg.getText().toString();
+
+                    sendText.setText("AT+SENCFG="+SensorCfgStr+"\n");
+                    send(sendText.getText().toString());
+                }
+			}
+		});
         //IN/OUT1
-        cb_in1_ana = view.findViewById(R.id.checkbox_in1_ana);
+        cb_in1_ana = view.findViewById(R.id.cb_in1_ana);
         cb_in1_ana.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(cb_in1_ana.isChecked()) {
-                    sendText.setText("AT+SENCFG=1\n");
-                    send(sendText.getText().toString());
-                }
+                in1_ana = cb_in1_ana.isChecked();
+                if(in1_ana)
+                    SensorCfg |=  (0x01 << 0);
+                else
+                    SensorCfg &= ~(0x01 << 0);
+                et_sens_cfg.setText(String.format("%04X",SensorCfg));
             }
         });
-        cb_in1_dig = view.findViewById(R.id.checkbox_in1_dig);
-        cb_in1_dig.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        cb_in1_dig = view.findViewById(R.id.cb_in1_dig);
+        cb_in1_dig.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(cb_in1_dig.isChecked()) {
-                    sendText.setText("AT+SENCFG=2\n");
-                    send(sendText.getText().toString());
-                }
+            public void onClick(View view) {
+                in1_dig = cb_in1_dig.isChecked();
+                if(in1_dig)
+                    SensorCfg |=  (0x01 << 1);
+                else
+                    SensorCfg &= ~(0x01 << 1);
+                et_sens_cfg.setText(String.format("%04X",SensorCfg));
             }
         });
-
+        cb_in1_2dig = view.findViewById(R.id.cb_in1_2dig);
+        cb_in1_2dig.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                in1_2dig = cb_in1_2dig.isChecked();
+                if(in1_2dig)
+                    SensorCfg |=  (0x01 << 2);
+                else
+                    SensorCfg &= ~(0x01 << 2);
+                et_sens_cfg.setText(String.format("%04X",SensorCfg));
+            }
+        });
         //IN/OUT2
+        cb_in2_ana = view.findViewById(R.id.cb_in2_ana);
+        cb_in2_ana.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                in2_ana = cb_in2_ana.isChecked();
+                if(in2_ana)
+                    SensorCfg |=  (0x01 << 4);
+                else
+                    SensorCfg &= ~(0x01 << 4);
+                et_sens_cfg.setText(String.format("%04X",SensorCfg));
+            }
+        });
+        cb_in2_dig = view.findViewById(R.id.cb_in2_dig);
+        cb_in2_dig.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                in2_dig = cb_in2_dig.isChecked();
+                if(in2_dig)
+                    SensorCfg |=  (0x01 << 5);
+                else
+                    SensorCfg &= ~(0x01 << 5);
+                et_sens_cfg.setText(String.format("%04X",SensorCfg));
+            }
+        });
+        cb_out2_st = view.findViewById(R.id.cb_out2_st);
+        cb_out2_st.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                out2_st = cb_out2_st.isChecked();
+                if(out2_st)
+                    SensorCfg |=  (0x01 << 6);
+                else
+                    SensorCfg &= ~(0x01 << 6);
+                et_sens_cfg.setText(String.format("%04X",SensorCfg));
+            }
+        });
 
         //BUSY_SOURCE
         btn_get_busy_source = view.findViewById(R.id.btn_get_busy_source);
@@ -516,6 +672,15 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 				tb_connect.setChecked(false);
                 tv_version.setText("");
                 et_serial.setText("");
+                et_sens_cfg.setText("");
+                cb_in1_ana.setChecked(false);
+                cb_in1_dig.setChecked(false);
+                cb_in1_2dig.setChecked(false);
+                cb_in2_ana.setChecked(false);
+                cb_in2_dig.setChecked(false);
+                cb_out2_st.setChecked(false);
+                et_odom_constant.setText("");
+                et_odom_value.setText("");
                 et_pwron_counter.setText("");
                 sendText.setText("AT+RST=1\n");
                 send(sendText.getText().toString());
@@ -698,13 +863,19 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
             receiveText.append(TextUtil.toCaretString(msg, newline.length() != 0));
 
+            msg = msg.replace("\u00F3","ó");
             final String _VER_ = "+VER: ";
-            if(msg.contains(_VER_))
-                tv_version.setText(
-                        msg.substring(
-                                msg.indexOf(_VER_)+_VER_.length(),
-                                msg.indexOf(" | ",msg.indexOf(_VER_)))
-                );
+            if(msg.contains(_VER_)) {
+                String versionStr = msg.substring(
+                        msg.indexOf(_VER_)+_VER_.length(),
+                        msg.indexOf(" | ",msg.indexOf(_VER_)));
+            //  tv_version.setText(String.format("%d",versionStr.charAt(8)));
+            //  ByteBuffer versionBuff = StandardCharsets.US_ASCII.encode(versionStr);
+            //  String versionStrUtf8 = StandardCharsets.US_ASCII.decode(versionBuff).toString();
+            //  tv_version.setText(versionStrUtf8);
+            //  tv_version.setText(versionStr, TextView.BufferType.SPANNABLE);
+                tv_version.setText(versionStr);
+            }
             final String _SN_ = "+SN: ";
             if(msg.contains(_SN_))
                 et_serial.setText(
@@ -712,6 +883,56 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                                 msg.indexOf(_SN_)+_SN_.length(),
                                 msg.indexOf(TextUtil.newline_lf,msg.indexOf(_SN_)))
                 );
+            final String _SENCFG_ = "+SENCFG: ";
+            if(msg.contains(_SENCFG_)) {
+                byte[] SensorCfgBytes;
+                String SensorCfgStr = msg.substring(
+                        msg.indexOf(_SENCFG_) + _SENCFG_.length(),
+                        msg.indexOf(TextUtil.newline_lf, msg.indexOf(_SENCFG_)));
+                SensorCfgBytes = TextUtil.fromHexString(SensorCfgStr);
+
+                in1_ana  = ((SensorCfgBytes[1] >> 0) & 0x01) > 0;
+                in1_dig  = ((SensorCfgBytes[1] >> 1) & 0x01) > 0;
+                in1_2dig = ((SensorCfgBytes[1] >> 2) & 0x01) > 0;
+                in2_ana  = ((SensorCfgBytes[1] >> 4) & 0x01) > 0;
+                in2_dig  = ((SensorCfgBytes[1] >> 5) & 0x01) > 0;
+                out2_st  = ((SensorCfgBytes[1] >> 6) & 0x01) > 0;
+
+                cb_in1_ana.setChecked(in1_ana);
+                cb_in1_dig.setChecked(in1_dig);
+                cb_in1_2dig.setChecked(in1_2dig);
+                cb_in2_ana.setChecked(in2_ana);
+                cb_in2_dig.setChecked(in2_dig);
+                cb_out2_st.setChecked(out2_st);
+
+                SensorCfg = 0;
+                if(in1_ana)
+                    SensorCfg |=  (0x01 << 0);
+                else
+                    SensorCfg &= ~(0x01 << 0);
+                if(in1_dig)
+                    SensorCfg |=  (0x01 << 1);
+                else
+                    SensorCfg &= ~(0x01 << 1);
+                if(in1_2dig)
+                    SensorCfg |=  (0x01 << 2);
+                else
+                    SensorCfg &= ~(0x01 << 2);
+                if(in2_ana)
+                    SensorCfg |=  (0x01 << 4);
+                else
+                    SensorCfg &= ~(0x01 << 4);
+                if(in2_dig)
+                    SensorCfg |=  (0x01 << 5);
+                else
+                    SensorCfg &= ~(0x01 << 5);
+                if(out2_st)
+                    SensorCfg |=  (0x01 << 6);
+                else
+                    SensorCfg &= ~(0x01 << 6);
+
+                et_sens_cfg.setText(String.format("%04X",SensorCfg));
+            }
             final String _REMIS_ = "+REMIS: ";
             if(msg.contains(_REMIS_))
                 if(Byte.parseByte(
@@ -747,7 +968,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     case 1: sp_odom_divider.setSelection(3); break;
                 }
             }
-            final String _PWRON_ = "+ATPWRON: ";
+            final String _PWRON_ = "+PWRON: ";
             if(msg.contains(_PWRON_))
                 et_pwron_counter.setText(
                         msg.substring(
