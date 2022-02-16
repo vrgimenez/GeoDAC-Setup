@@ -168,6 +168,11 @@
                     android:layout_height="wrap_content"
                     android:text="Sensor Digital" />
                 <CheckBox
+                    android:id="@+id/cb_in1_2ana"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sensor Analógico Doble" />
+                <CheckBox
                     android:id="@+id/cb_in1_2dig"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

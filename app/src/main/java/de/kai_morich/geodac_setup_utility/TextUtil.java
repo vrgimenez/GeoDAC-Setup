@@ -1,4 +1,4 @@
-package de.kai_morich.simple_usb_terminal;
+package de.kai_morich.geodac_setup_utility;
 
 import android.text.Editable;
 import android.text.InputType;
