@@ -196,6 +196,80 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     /*
      * UI
      */
+
+	public void getSensorCfgBits(byte[] Bytes) {
+		in1_ana  = ((Bytes[1] >> 0) & 0x01) > 0;
+		in1_dig  = ((Bytes[1] >> 1) & 0x01) > 0;
+		in1_2ana = ((Bytes[1] >> 2) & 0x01) > 0;
+		in1_2dig = ((Bytes[1] >> 3) & 0x01) > 0;
+		in2_ana  = ((Bytes[1] >> 4) & 0x01) > 0;
+		in2_dig  = ((Bytes[1] >> 5) & 0x01) > 0;
+		out2_st  = ((Bytes[1] >> 6) & 0x01) > 0;
+	}
+
+	public void setSensorCfgBits() {
+		if(in1_2dig)        // si junto los Sensores Digitales
+		{
+			in1_dig= true;  // habilito como Entrada Digital In1/Rear
+			in2_dig= false; // y deshabilito Entrada Digital In2/Front
+		}
+		if(in1_2ana)        // si junto los Sensores Analógicos
+		{
+			in1_ana= true;  // habilito Entrada Analógica In1/Rear
+		}
+		if( in2_ana ||      // si habilito la Entrada In2/Front, inhibo la Salida de Estado (y viceversa)
+			in2_dig )
+		{
+			out2_st= false;
+		}
+		else
+		if(out2_st)
+		{
+			in2_ana= false;
+			in2_dig= false;
+		}
+	}
+
+    public void updateSensorCfg() {
+		cb_in1_ana.setChecked(in1_ana);
+		cb_in1_dig.setChecked(in1_dig);
+		cb_in1_2ana.setChecked(in1_2ana);
+		cb_in1_2dig.setChecked(in1_2dig);
+		cb_in2_ana.setChecked(in2_ana);
+		cb_in2_dig.setChecked(in2_dig);
+		cb_out2_st.setChecked(out2_st);
+
+		SensorCfg = 0;
+		if(in1_ana)
+			SensorCfg |=  (0x01 << 0);
+		else
+			SensorCfg &= ~(0x01 << 0);
+		if(in1_dig)
+			SensorCfg |=  (0x01 << 1);
+		else
+			SensorCfg &= ~(0x01 << 1);
+		if(in1_2ana)
+			SensorCfg |=  (0x01 << 2);
+		else
+			SensorCfg &= ~(0x01 << 2);
+		if(in1_2dig)
+			SensorCfg |=  (0x01 << 3);
+		else
+			SensorCfg &= ~(0x01 << 3);
+		if(in2_ana)
+			SensorCfg |=  (0x01 << 4);
+		else
+			SensorCfg &= ~(0x01 << 4);
+		if(in2_dig)
+			SensorCfg |=  (0x01 << 5);
+		else
+			SensorCfg &= ~(0x01 << 5);
+		if(out2_st)
+			SensorCfg |=  (0x01 << 6);
+		else
+			SensorCfg &= ~(0x01 << 6);
+	}
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_terminal, container, false);
@@ -322,64 +396,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     et_sens_cfg.setError("(0x0 a 0xFFFF)");
                 }
                 else {
-                    if(in1_2dig)        // si junto los Sensores Digitales
-                    {
-                        in1_dig= true;  // habilito como Entrada Digital In1/Rear
-                        in2_dig= false; // y deshabilito Entrada Digital In2/Front
-                    }
-                    if(in1_2ana)        // si junto los Sensores Analógicos
-                    {
-                        in1_ana= true;  // habilito Entrada Analógica In1/Rear
-                    }
-                    if( in2_ana ||      // si habilito la Entrada In2/Front, inhibo la Salida de Estado (y viceversa)
-                        in2_dig )
-                    {
-                        out2_st= false;
-                    }
-                    else
-                    if(out2_st)
-                    {
-                        in2_ana= false;
-                        in2_dig= false;
-                    }
-
-                    cb_in1_ana.setChecked(in1_ana);
-                    cb_in1_dig.setChecked(in1_dig);
-					cb_in1_2ana.setChecked(in1_2ana);
-                    cb_in1_2dig.setChecked(in1_2dig);
-                    cb_in2_ana.setChecked(in2_ana);
-                    cb_in2_dig.setChecked(in2_dig);
-                    cb_out2_st.setChecked(out2_st);
-
-                    SensorCfg = 0;
-                    if(in1_ana)
-                        SensorCfg |=  (0x01 << 0);
-                    else
-                        SensorCfg &= ~(0x01 << 0);
-                    if(in1_dig)
-                        SensorCfg |=  (0x01 << 1);
-                    else
-                        SensorCfg &= ~(0x01 << 1);
-                    if(in1_2ana)
-                        SensorCfg |=  (0x01 << 2);
-                    else
-                        SensorCfg &= ~(0x01 << 2);
-                    if(in1_2dig)
-                        SensorCfg |=  (0x01 << 3);
-                    else
-                        SensorCfg &= ~(0x01 << 3);
-                    if(in2_ana)
-                        SensorCfg |=  (0x01 << 4);
-                    else
-                        SensorCfg &= ~(0x01 << 4);
-                    if(in2_dig)
-                        SensorCfg |=  (0x01 << 5);
-                    else
-                        SensorCfg &= ~(0x01 << 5);
-                    if(out2_st)
-                        SensorCfg |=  (0x01 << 6);
-                    else
-                        SensorCfg &= ~(0x01 << 6);
+					setSensorCfgBits();
+					updateSensorCfg();
 
                     et_sens_cfg.setText(String.format("%04X",SensorCfg));
                     SensorCfgStr = et_sens_cfg.getText().toString();
@@ -908,51 +926,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                         msg.indexOf(TextUtil.newline_lf, msg.indexOf(_SENCFG_)));
                 SensorCfgBytes = TextUtil.fromHexString(SensorCfgStr);
 
-                in1_ana  = ((SensorCfgBytes[1] >> 0) & 0x01) > 0;
-                in1_dig  = ((SensorCfgBytes[1] >> 1) & 0x01) > 0;
-				in1_2ana = ((SensorCfgBytes[1] >> 2) & 0x01) > 0;
-                in1_2dig = ((SensorCfgBytes[1] >> 3) & 0x01) > 0;
-                in2_ana  = ((SensorCfgBytes[1] >> 4) & 0x01) > 0;
-                in2_dig  = ((SensorCfgBytes[1] >> 5) & 0x01) > 0;
-                out2_st  = ((SensorCfgBytes[1] >> 6) & 0x01) > 0;
-
-                cb_in1_ana.setChecked(in1_ana);
-                cb_in1_dig.setChecked(in1_dig);
-				cb_in1_2ana.setChecked(in1_2ana);
-                cb_in1_2dig.setChecked(in1_2dig);
-                cb_in2_ana.setChecked(in2_ana);
-                cb_in2_dig.setChecked(in2_dig);
-                cb_out2_st.setChecked(out2_st);
-
-                SensorCfg = 0;
-                if(in1_ana)
-                    SensorCfg |=  (0x01 << 0);
-                else
-                    SensorCfg &= ~(0x01 << 0);
-                if(in1_dig)
-                    SensorCfg |=  (0x01 << 1);
-                else
-                    SensorCfg &= ~(0x01 << 1);
-				if(in1_2ana)
-					SensorCfg |=  (0x01 << 2);
-				else
-					SensorCfg &= ~(0x01 << 2);
-                if(in1_2dig)
-                    SensorCfg |=  (0x01 << 3);
-                else
-                    SensorCfg &= ~(0x01 << 3);
-                if(in2_ana)
-                    SensorCfg |=  (0x01 << 4);
-                else
-                    SensorCfg &= ~(0x01 << 4);
-                if(in2_dig)
-                    SensorCfg |=  (0x01 << 5);
-                else
-                    SensorCfg &= ~(0x01 << 5);
-                if(out2_st)
-                    SensorCfg |=  (0x01 << 6);
-                else
-                    SensorCfg &= ~(0x01 << 6);
+				getSensorCfgBits(SensorCfgBytes);
+				updateSensorCfg();
 
                 et_sens_cfg.setText(String.format("%04X",SensorCfg));
             }

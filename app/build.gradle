@@ -9,7 +9,7 @@ android {
         minSdkVersion 18
         vectorDrawables.useSupportLibrary true
 
-        applicationId "de.kai_morich.simple_usb_terminal"
+        applicationId 'de.kai_morich.geodac_setup_utility'
         versionCode 1
         versionName "1.0"
     }
