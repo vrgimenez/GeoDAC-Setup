@@ -9,7 +9,7 @@ android {
         minSdkVersion 18
         vectorDrawables.useSupportLibrary true
 
-        applicationId 'de.kai_morich.geodac_setup_utility'
+        applicationId 'ar.vrx_design.geodac_setup_utility'
         versionCode 1
         versionName "1.0"
     }
@@ -27,7 +27,6 @@ android {
 
 dependencies {
     implementation 'com.github.mik3y:usb-serial-for-android:3.4.3' // maven jitpack
-    //implementation('com.github.mik3y:usb-serial-for-android:3.0.0beta') { changing = true } // maven local
 
     implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'com.google.android.material:material:1.4.0'

@@ -1,5 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE resources [
+    <!ENTITY company_name "Maker Electrónica">
+    <!ENTITY company_url "www.makerelectronica.com.ar">
+    <!ENTITY legal_copyright "(c)2022 Ing.V.Raúl Giménez | vrgimenez@gmail.com">
+    <!ENTITY product_name "GeoDAC+ Setup">
+    <!ENTITY product_version "22.0912">
+    ]>
+
 <resources>
-    <string name="app_name">GeoDAC+ Setup</string>
+    <string name="app_name">&product_name; v&product_version;</string>
     <string name="devices">USB Devices</string>
     <string name="busy_source">Se Ocupa con</string>
+
+    <string name="legal_trademark">(c)2010 &company_name; | &company_url;</string>
 </resources>

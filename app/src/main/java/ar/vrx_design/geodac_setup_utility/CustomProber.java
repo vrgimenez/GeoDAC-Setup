@@ -1,4 +1,4 @@
-package de.kai_morich.geodac_setup_utility;
+package ar.vrx_design.geodac_setup_utility;
 
 import com.hoho.android.usbserial.driver.CdcAcmSerialDriver;
 import com.hoho.android.usbserial.driver.ProbeTable;

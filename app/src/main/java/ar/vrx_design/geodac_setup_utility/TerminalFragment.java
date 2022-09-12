@@ -1,4 +1,4 @@
-package de.kai_morich.geodac_setup_utility;
+package ar.vrx_design.geodac_setup_utility;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -270,7 +270,19 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 			SensorCfg &= ~(0x01 << 6);
 	}
 
-    @Override
+	public boolean validateEditTextStr(@NonNull EditText et, String regex, String error) {
+		String str = et.getText().toString();
+		if (str.length() == 0) {
+			et.requestFocus();
+			et.setError("Completar");
+		} else if (!str.matches(regex)) {
+			et.requestFocus();
+			et.setError(error);
+		} else return true;
+		return false;
+	}
+
+	@Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_terminal, container, false);
         receiveText = view.findViewById(R.id.receive_text);                          // TextView performance decreases with number of spans
@@ -326,31 +338,15 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         et_serial.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String SerialNStr = et_serial.getText().toString();
-                if(SerialNStr.length() == 0) {
-                    et_serial.requestFocus();
-                    et_serial.setError("Completar");
-                }
-                else if (!SerialNStr.matches(regex_0toFFFFFFFFFFFF)) {
-                    et_serial.requestFocus();
-                    et_serial.setError("(0x0 a 0xFFFFFFFFFFFF)");
-                }
+            	validateEditTextStr(et_serial, regex_0toFFFFFFFFFFFF, "(0x0 a 0xFFFFFFFFFFFF)");
             }
         });
         btn_set_serial = view.findViewById(R.id.btn_set_serial);
         btn_set_serial.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String SerialNStr = et_serial.getText().toString();
-                if(SerialNStr.length() == 0) {
-                    et_serial.requestFocus();
-                    et_serial.setError("Completar");
-                }
-                else if (!SerialNStr.matches(regex_0toFFFFFFFFFFFF)) {
-                    et_serial.requestFocus();
-                    et_serial.setError("(0x0 a 0xFFFFFFFFFFFF)");
-                }
-                else {
+				String SerialNStr = et_serial.getText().toString();
+				if(validateEditTextStr(et_serial, regex_0toFFFFFFFFFFFF, "(0x0 a 0xFFFFFFFFFFFF)")) {
                     sendText.setText("AT+SN="+SerialNStr+"\n");
                     send(sendText.getText().toString());
                 }
@@ -371,15 +367,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 		et_sens_cfg.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				String SensorCfgStr = et_sens_cfg.getText().toString();
-				if(SensorCfgStr.length() == 0) {
-					et_sens_cfg.requestFocus();
-					et_sens_cfg.setError("Completar");
-				}
-				else if (!SensorCfgStr.matches(regex_0toFFFF)) {
-					et_sens_cfg.requestFocus();
-					et_sens_cfg.setError("(0x0 a 0xFFFF)");
-				}
+				validateEditTextStr(et_sens_cfg, regex_0toFFFF, "(0x0 a 0xFFFF)");
 			}
 		});
         btn_set_sens_cfg = view.findViewById(R.id.btn_set_sens_cfg);
@@ -387,15 +375,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 			@Override
 			public void onClick(View view) {
                 String SensorCfgStr = et_sens_cfg.getText().toString();
-                if(SensorCfgStr.length() == 0) {
-                    et_sens_cfg.requestFocus();
-                    et_sens_cfg.setError("Completar");
-                }
-                else if (!SensorCfgStr.matches(regex_0toFFFF)) {
-                    et_sens_cfg.requestFocus();
-                    et_sens_cfg.setError("(0x0 a 0xFFFF)");
-                }
-                else {
+                if(validateEditTextStr(et_sens_cfg, regex_0toFFFF, "(0x0 a 0xFFFF)")) {
 					setSensorCfgBits();
 					updateSensorCfg();
 
@@ -534,15 +514,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 		et_odom_constant.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				String OdometerConstStr = et_odom_constant.getText().toString();
-				if(OdometerConstStr.length() == 0) {
-					et_odom_constant.requestFocus();
-					et_odom_constant.setError("Completar");
-				}
-				else if (!OdometerConstStr.matches(regex_1to59999)) {
-					et_odom_constant.requestFocus();
-					et_odom_constant.setError("(1 a 59999)");
-				}
+				validateEditTextStr(et_odom_constant, regex_1to59999, "(1 a 59999)");
 			}
 		});
         btn_set_odom_constant = view.findViewById(R.id.btn_set_odom_constant);
@@ -550,15 +522,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @Override
             public void onClick(View view) {
 				String OdometerConstStr = et_odom_constant.getText().toString();
-				if(OdometerConstStr.length() == 0) {
-					et_odom_constant.requestFocus();
-					et_odom_constant.setError("Completar");
-				}
-				else if (!OdometerConstStr.matches(regex_1to59999)) {
-					et_odom_constant.requestFocus();
-					et_odom_constant.setError("(1 a 59999)");
-				}
-				else {
+				if(validateEditTextStr(et_odom_constant, regex_1to59999, "(1 a 59999)")) {
 					sendText.setText("AT+ODOMC="+OdometerConstStr+"\n");
 					send(sendText.getText().toString());
 				}
@@ -579,15 +543,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         et_odom_value.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String OdometerValStr = et_odom_value.getText().toString();
-                if(OdometerValStr.length() == 0) {
-                    et_odom_value.requestFocus();
-                    et_odom_value.setError("Completar");
-                }
-                else if (!OdometerValStr.matches(regex_0to9999999999)) {
-                    et_odom_value.requestFocus();
-                    et_odom_value.setError("(0 a 4294967295)");
-                }
+				validateEditTextStr(et_odom_value, regex_0to9999999999, "(0 a 4294967295)");
             }
         });
         btn_set_odom_value = view.findViewById(R.id.btn_set_odom_value);
@@ -595,15 +551,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @Override
             public void onClick(View view) {
                 String OdometerValStr = et_odom_value.getText().toString();
-                if(OdometerValStr.length() == 0) {
-                    et_odom_value.requestFocus();
-                    et_odom_value.setError("Completar");
-                }
-                else if (!OdometerValStr.matches(regex_0to9999999999)) {
-                    et_odom_value.requestFocus();
-                    et_odom_value.setError("(0 a 4294967295)");
-                }
-                else {
+                if(validateEditTextStr(et_odom_value, regex_0to9999999999, "(0 a 4294967295)")) {
                     long OdometerVal = Long.getLong(OdometerValStr);
                     if(OdometerVal > 4294967295L) {
                         et_odom_value.requestFocus();
@@ -667,15 +615,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         et_pwron_counter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String PowerOnCntStr = et_pwron_counter.getText().toString();
-                if(PowerOnCntStr.length() == 0) {
-                    et_pwron_counter.requestFocus();
-                    et_pwron_counter.setError("Completar");
-                }
-                else if (!PowerOnCntStr.matches(regex_0toFF)) {
-                    et_pwron_counter.requestFocus();
-                    et_pwron_counter.setError("(0 a 255)");
-                }
+				validateEditTextStr(et_pwron_counter, regex_0toFF, "(0 a 255)");
             }
         });
         btn_set_pwron_counter = view.findViewById(R.id.btn_set_pwron_counter);
@@ -683,15 +623,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 			@Override
 			public void onClick(View view) {
                 String PowerOnCntStr = et_pwron_counter.getText().toString();
-                if(PowerOnCntStr.length() == 0) {
-                    et_pwron_counter.requestFocus();
-                    et_pwron_counter.setError("Completar");
-                }
-                else if (!PowerOnCntStr.matches(regex_0toFF)) {
-                    et_pwron_counter.requestFocus();
-                    et_pwron_counter.setError("(0 a 255)");
-                }
-                else {
+                if(validateEditTextStr(et_pwron_counter, regex_0toFF, "(0 a 255)")) {
                     sendText.setText("AT+PWRON="+PowerOnCntStr+"\n");
                     send(sendText.getText().toString());
                 }
@@ -898,17 +830,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             }
             receiveText.append(TextUtil.toCaretString(msg, newline.length() != 0));
 
-            msg = msg.replace("\u00F3","ó");
+        //  msg = msg.replace("�","ó");
+			msg = msg.replace("\uFFFD","ó");
             final String _VER_ = "+VER: ";
             if(msg.contains(_VER_)) {
                 String versionStr = msg.substring(
                         msg.indexOf(_VER_)+_VER_.length(),
                         msg.indexOf(" | ",msg.indexOf(_VER_)));
-            //  tv_version.setText(String.format("%d",versionStr.charAt(8)));
-            //  ByteBuffer versionBuff = StandardCharsets.US_ASCII.encode(versionStr);
-            //  String versionStrUtf8 = StandardCharsets.US_ASCII.decode(versionBuff).toString();
-            //  tv_version.setText(versionStrUtf8);
-            //  tv_version.setText(versionStr, TextView.BufferType.SPANNABLE);
                 tv_version.setText(versionStr);
             }
             final String _SN_ = "+SN: ";
