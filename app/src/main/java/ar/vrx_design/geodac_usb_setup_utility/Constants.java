@@ -1,4 +1,4 @@
-package ar.vrx_design.geodac_setup_utility;
+package ar.vrx_design.geodac_usb_setup_utility;
 
 class Constants {
 

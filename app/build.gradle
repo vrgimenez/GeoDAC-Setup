@@ -9,7 +9,7 @@ android {
         minSdkVersion 18
         vectorDrawables.useSupportLibrary true
 
-        applicationId 'ar.vrx_design.geodac_setup_utility'
+        applicationId 'ar.vrx_design.geodac_usb_setup_utility'
         versionCode 1
         versionName "1.0"
     }

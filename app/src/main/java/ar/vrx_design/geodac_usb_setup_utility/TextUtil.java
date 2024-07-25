@@ -1,4 +1,4 @@
-package ar.vrx_design.geodac_setup_utility;
+package ar.vrx_design.geodac_usb_setup_utility;
 
 import android.text.Editable;
 import android.text.InputType;
@@ -79,7 +79,7 @@ final class TextUtil {
     static CharSequence toCaretString(CharSequence s, boolean keepNewline, int length) {
         boolean found = false;
         for (int pos = 0; pos < length; pos++) {
-            if (s.charAt(pos) < 32 && (!keepNewline ||s.charAt(pos)!='\n')) {
+            if (s.charAt(pos) < ' ' && (!keepNewline || s.charAt(pos)!='\n')) {
                 found = true;
                 break;
             }
@@ -88,9 +88,9 @@ final class TextUtil {
             return s;
         SpannableStringBuilder sb = new SpannableStringBuilder();
         for(int pos=0; pos<length; pos++)
-            if (s.charAt(pos) < 32 && (!keepNewline ||s.charAt(pos)!='\n')) {
+            if (s.charAt(pos) < ' ' && (!keepNewline || s.charAt(pos)!='\n')) {
                 sb.append('^');
-                sb.append((char)(s.charAt(pos) + 64));
+                sb.append((char)(s.charAt(pos) + '@'));
                 sb.setSpan(new BackgroundColorSpan(caretBackground), sb.length()-2, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             } else {
                 sb.append(s.charAt(pos));
